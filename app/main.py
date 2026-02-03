@@ -2,13 +2,9 @@ from fastapi import FastAPI, HTTPException, status
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from app.models import User, Order, Item
-
-
-items: list[Item] = []
-
-orders: list[Order] = []
-
-users: list[User] = []  
+from app.routers import user_router, item_router, order_router
+from app.db.database import users, items, orders
+ 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,56 +30,14 @@ async def lifespan(app: FastAPI):
     # shut it down
     users.clear()
     items.clear()
+    orders.clear()
 
 app = FastAPI(lifespan=lifespan) # remove lifespan when db is added
 
-### user
+app.include_router(user_router.router, prefix="/users", tags=["users"])
+app.include_router(item_router.router, prefix="/items", tags=["items"])
+app.include_router(order_router.router, prefix="/orders", tags={"orders"})
 
-### order 
-
-# Make an order
-@app.post("/order", status_code = status.HTTP_201_CREATED)
-def make_order(order: Order):
-    orders.append(order)
-    return order
-
-# Delete an order
-@app.delete("/order/{order_id}", status_code = status.HTTP_204_NO_CONTENT)
-def remove_order(order_id: int):
-    if order_id not in [o.id for o in orders]:
-        raise HTTPException(status_code=404, detail="Order not found")
-    for order in orders:
-        if order.id == order_id:
-            orders.remove(order)
-
-# Get all orders for any or all users
-@app.get("/orders", status_code = status.HTTP_200_OK)
-def get_users_orders(user_id: int | None = None):
-    if user_id is None:
-        return orders
-    if user_id not in [u.id for u in users]:
-        raise HTTPException(status_code=404, detail="User not found")
-    user_orders = []
-    for order in orders:
-        if order.user.id == user_id:
-            user_orders.append(order)
-    return user_orders
-
-### item
-
-# Add an item to inventory
-@app.post("/item", status_code=status.HTTP_201_CREATED)
-def create_item(item: Item):
-    if item.id in items:
-        raise HTTPException(status_code=400, detail="Item already exists")
-    items.append(item)
-    return item
-
-# Delete and item
-@app.delete("/item/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_item(item_id: int):
-    if item_id not in [i.id for i in items]:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No item with id {item_id}")
-    for item in items:
-        if item.id == item_id:
-            items.remove(item)
+@app.get("/", status_code=status.HTTP_200_OK)
+def root():
+    return {"\"This task was appointed to you. And if you do not find a way, no one will.\" — Galadriel, The Fellowship of the Ring"}
