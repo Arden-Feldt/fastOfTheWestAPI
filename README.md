@@ -1,0 +1,1 @@
+Learning FastAPI and SQLAlchemy for a technical in three days. Very basic ecommerce backend populated with Lord of the Rings inspired data.
