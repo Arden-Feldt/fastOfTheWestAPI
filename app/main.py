@@ -2,33 +2,13 @@ from fastapi import FastAPI, status
 from contextlib import asynccontextmanager
 from app.models import User, Order, Item
 from app.routers import user_router, item_router, order_router
-from app.db.database import _test_db as database
+from app.db.database import Base, engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    frodo = User(id=0, name="Frodo", password="password")
-    galadriel = User(id=1, name="Galadriel", password="password")
-
-    ring = Item(id=0, name="ring", cost=10)
-    sting = Item(id=1, name="sting", cost=15)
-    palantir = Item(id=2, name="palantir", cost=25)
-
-    database["users"].extend([frodo, galadriel])
-    database["items"].extend([ring, sting, palantir])
-    database["orders"].extend(
-        [
-            Order(id=0, user_id=0, item_id=0),
-            Order(id=1, user_id=0, item_id=1),
-            Order(id=2, user_id=1, item_id=2),
-        ]
-    )
-
+    Base.metadata.create_all(bind=engine)
     yield
-
-    database["users"].clear()
-    database["items"].clear()
-    database["orders"].clear()
 
 
 app = FastAPI(lifespan=lifespan)  # remove lifespan when db is added

@@ -1,18 +1,19 @@
-from app.models import Item, Order, User
 from typing import Generator
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base  
 
-items: list[Item] = []
-orders: list[Order] = []
-users: list[User] = []
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test_db.db"
 
-_test_db = {"users": [], "items": [], "orders": []}
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+Base = declarative_base()
 
 def get_db() -> Generator:
-    db = _test_db
+    db = SessionLocal()
     try:
         # pass db
         yield db
     finally:
         # close db
-        pass
+        db.close()

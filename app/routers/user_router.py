@@ -1,19 +1,17 @@
 from fastapi import APIRouter, Depends
 from fastapi import HTTPException
 from app.db.database import get_db
-from app.models import ResetPassword
+from app.models import ResetPassword, User
+from sqlalchemy.orm import Session
 
 
 router = APIRouter()
 
-
 # get users
 @router.get("/", status_code=200)
-def get_users(db: dict = Depends(get_db)):
-    user_names = []
-    for user in db["users"]:
-        user_names.append(user.name)
-    return user_names
+def get_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
+
 
 
 # make a user
